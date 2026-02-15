@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import client from "./pgConfigure.js";
+import authRoutes from "../routes/authRoutes.js";
 
 const app = express();
 app.use(cors());
@@ -10,9 +10,7 @@ const PORT = 3000;
 app.get("/", (req, res) => {
   res.send("hello world");
 });
-app.get("/about", (req, res) => {
-  res.send("<h1>Hello I am aayush</h2>");
-});
+app.use("/auth", authRoutes);
 
 app.listen(PORT, () => {
   console.log("server is live on port :", PORT);
