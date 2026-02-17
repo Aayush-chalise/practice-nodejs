@@ -28,4 +28,21 @@ router.post("/register", async (req, res) => {
   res.send({ message: "User created successfully", user });
 });
 
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  if (email || password) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+  const result = await client.query(`SELECT * FROM users WHERE email = $1`, [
+    email,
+  ]);
+
+  const user = result.rows[0];
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+});
+
 export default router;
