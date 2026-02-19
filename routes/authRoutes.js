@@ -14,23 +14,27 @@ router.post("/register", async (req, res) => {
     return res.status(400).json({ message: "All fields are required" });
   }
 
-  const salt = await bcrypt.genSalt(10);
-  const hashedpassword = await bcrypt.hash(password, salt);
+  try {
+    const salt = await bcrypt.genSalt(10);
+    const hashedpassword = await bcrypt.hash(password, salt);
 
-  const result = await client.query(
-    `INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING * `,
+    const result = await client.query(
+      `INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING * `,
 
-    [username, email, hashedpassword],
-  );
+      [username, email, hashedpassword],
+    );
 
-  const user = result.rows[0];
+    const user = result.rows[0];
 
-  const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-    expiresIn: "24h",
-  });
-  res.json({ token });
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "24h",
+    });
+    res.json({ token });
 
-  res.send({ message: "User created successfully", user });
+    res.send({ message: "User created successfully", user });
+  } catch (err) {
+    res.sendStatus(503);
+  }
 });
 
 router.post("/login", async (req, res) => {
