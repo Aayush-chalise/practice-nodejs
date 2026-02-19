@@ -24,7 +24,12 @@ router.post("/register", async (req, res) => {
   );
 
   const user = result.rows[0];
-  console.log(user);
+
+  const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+    expiresIn: "24h",
+  });
+  res.json({ token });
+
   res.send({ message: "User created successfully", user });
 });
 
@@ -34,16 +39,28 @@ router.post("/login", async (req, res) => {
   if (email || password) {
     return res.status(400).json({ message: "All fields are required" });
   }
-  const result = await client.query(`SELECT * FROM users WHERE email = $1`, [
-    email,
-  ]);
+  try {
+    const result = await client.query(`SELECT * FROM users WHERE email = $1`, [
+      email,
+    ]);
 
-  const user = result.rows[0];
+    const user = result.rows[0];
 
-  if (!user) {
-    return res.status(404).json({ message: "User not found" });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Invalid password" });
+    }
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "24h",
+    });
+    res.json({ token });
+  } catch (err) {
+    res.sendStatus(503);
   }
-  console.log(user);
 });
 
 export default router;
